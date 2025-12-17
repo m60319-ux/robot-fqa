@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Robot FQA Admin</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <style>
+    .admin-wrap{padding:14px; display:grid; gap:12px; max-width:1200px; margin:0 auto;}
+    .admin-card{border:1px solid var(--line); background: rgba(16,24,39,.5); border-radius: var(--radius); padding:12px;}
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
+    .field label{display:block; color:var(--muted); font-size:12px; margin:0 0 6px 2px;}
+    select,input,textarea{
+      width:100%; padding:10px 12px; border-radius: 12px;
+      border:1px solid var(--line); background: rgba(16,24,39,.65); color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:86px; resize:vertical}
+    .admin-actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
+    .img-preview{display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:10px; margin-top:10px;}
+    .img-preview .img-item{position:relative}
+    .rm-btn{
+      position:absolute; top:8px; right:8px;
+      border:1px solid var(--line); background: rgba(16,24,39,.75);
+      color:var(--text); border-radius:999px; padding:6px 8px; cursor:pointer;
+    }
+    .hint{color:var(--muted); font-size:12px; line-height:1.4}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  </style>
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-title">Robot FQA Admin</div>
+      <div class="brand-subtitle">圖片管理（Base64）· 匯出 faqs.json</div>
+    </div>
+    <div class="header-actions">
+      <a class="btn" href="./index.html">回到前台</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <section class="admin-card">
+      <div class="row">
+        <div class="field">
+          <label>選擇 FAQ 題目</label>
+          <select id="faqSelect"></select>
+        </div>
+        <div class="field">
+          <label>目前題目 ID</label>
+          <input id="faqId" class="mono" readonly />
+        </div>
+      </div>
+      <div class="hint">
+        小提醒：Base64 會讓 JSON 變大。建議單張圖片控制在 ~300KB 內（可先壓縮/截圖再上傳）。
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="row">
+        <div class="field">
+          <label>上傳圖片（PNG/JPG/WebP）</label>
+          <input id="fileInput" type="file" accept="image/*" />
+        </div>
+        <div class="field">
+          <label>圖片 ID（可留空，系統自動產生）</label>
+          <input id="imgIdInput" placeholder="img-1" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>中文說明（caption.zh）</label>
+          <textarea id="capZh" placeholder="例：接線示意 / 設定頁面位置"></textarea>
+        </div>
+        <div class="field">
+          <label>English caption (caption.en)</label>
+          <textarea id="capEn" placeholder="e.g., Wiring diagram / Location in settings page"></textarea>
+        </div>
+      </div>
+
+      <div class="admin-actions">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="addImageBtn" class="btn" type="button">加入圖片到此題</button>
+          <button id="saveDraftBtn" class="btn ghost" type="button">儲存草稿（LocalStorage）</button>
+          <button id="loadDraftBtn" class="btn ghost" type="button">載入草稿（LocalStorage）</button>
+        </div>
+        <button id="exportBtn" class="btn" type="button">匯出 faqs.json</button>
+      </div>
+
+      <div id="status" class="hint" style="margin-top:10px;"></div>
+
+      <div class="img-preview" id="preview"></div>
+    </section>
+  </main>
+
+  <script src="./assets/admin.js"></script>
+</body>
+</html>
