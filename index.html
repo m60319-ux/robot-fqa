@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Robot FQA | Delta + MS2 + DRAStudio Pro</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-title">Robot FQA</div>
+      <div class="brand-subtitle">Delta Arm · MS2 Controller · DRAStudio Pro</div>
+    </div>
+
+    <div class="header-actions">
+      <div class="search-wrap">
+        <input id="searchInput" class="search-input" type="search"
+               placeholder="搜尋：關鍵字 / tags / error code（例：ALM_045、E-1234）"
+               autocomplete="off" />
+        <button id="clearBtn" class="btn ghost" type="button" title="清除">清除</button>
+      </div>
+
+      <div class="controls">
+        <div class="segmented" role="tablist" aria-label="Language">
+          <button class="seg-btn active" data-lang="zh" type="button">中文</button>
+          <button class="seg-btn" data-lang="en" type="button">EN</button>
+        </div>
+
+        <button id="expandAllBtn" class="btn" type="button">全部展開</button>
+        <button id="collapseAllBtn" class="btn" type="button">全部收合</button>
+
+        <a class="btn" href="./admin.html" title="管理頁（新增圖片/匯出 JSON）">管理</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <aside class="sidebar">
+      <div class="sidebar-title">目錄</div>
+      <div class="sidebar-tools">
+        <button id="resetFilterBtn" class="btn small" type="button">清除篩選</button>
+      </div>
+      <nav id="toc" class="toc" aria-label="FAQ Table of Contents">
+        <div class="skeleton">載入中…</div>
+      </nav>
+    </aside>
+
+    <section class="content">
+      <div class="content-top">
+        <div id="activeFilter" class="active-filter"></div>
+        <div id="resultMeta" class="result-meta"></div>
+      </div>
+
+      <div id="faqList" class="faq-list">
+        <div class="skeleton">載入中…</div>
+      </div>
+
+      <div id="noResults" class="no-results hidden">
+        <div class="no-results-title">找不到符合的結果</div>
+        <div class="no-results-hint">
+          建議：試試看更短的關鍵字、或直接輸入錯誤碼（例：ALM_045 / E-1234）。
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div>© Robot FQA · Static Site MVP</div>
+    <div class="muted">資料來源：assets/faqs.json（可持續擴充）</div>
+  </footer>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
