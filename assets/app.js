@@ -1,11 +1,10 @@
-/* Robot FQA Static Site (MVP) - Delta + MS2 + DRAStudio Pro */
-
+/* Robot FQA Static Site (MVP) - Multi-language (zh / zh-CN / th / en) */
 const state = {
-  lang: "zh", // "zh" | "en"
+  lang: "zh", // "zh" | "zh-CN" | "th" | "en"
   data: null,
   query: "",
   filter: { category: null, subcategory: null, faqId: null },
-  expandedIds: new Set()
+  expandedIds: new Set(),
 };
 
 const els = {};
@@ -13,10 +12,7 @@ const $ = (id) => document.getElementById(id);
 
 function normalizeText(s) {
   if (!s) return "";
-  return String(s)
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
+  return String(s).trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function debounce(fn, delay = 200) {
@@ -39,23 +35,179 @@ function escapeHtml(s) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll("\"", "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll("'", "&#39;");
+}
+
+/** UI text i18n (interface labels only) */
+const UI = {
+  "zh": {
+    toc: "目錄",
+    reset: "重置",
+    clearFilter: "清除篩選",
+    expandAll: "展開全部",
+    collapseAll: "收合全部",
+    noResultsTitle: "找不到結果",
+    noResultsHint: "請嘗試不同關鍵字，或清除篩選。",
+    showing: (n) => `顯示 ${n} 筆`,
+    filtered: (n, t) => `顯示 ${n} / ${t} 筆`,
+    copy: "複製解法",
+    copied: "已複製",
+    images: "圖片",
+    related: "相關問題",
+    updated: (d) => `更新：${d}`,
+    tocEmpty: "目前沒有可顯示的目錄。",
+    viewAll: (cat) => `查看全部：${cat}`,
+  },
+  "zh-CN": {
+    toc: "目录",
+    reset: "重置",
+    clearFilter: "清除筛选",
+    expandAll: "展开全部",
+    collapseAll: "收合全部",
+    noResultsTitle: "未找到结果",
+    noResultsHint: "请尝试不同关键词，或清除筛选。",
+    showing: (n) => `显示 ${n} 条`,
+    filtered: (n, t) => `显示 ${n} / ${t} 条`,
+    copy: "复制解法",
+    copied: "已复制",
+    images: "图片",
+    related: "相关问题",
+    updated: (d) => `更新：${d}`,
+    tocEmpty: "当前没有可显示的目录。",
+    viewAll: (cat) => `查看全部：${cat}`,
+  },
+  "th": {
+    toc: "สารบัญ",
+    reset: "รีเซ็ต",
+    clearFilter: "ล้างตัวกรอง",
+    expandAll: "ขยายทั้งหมด",
+    collapseAll: "ย่อทั้งหมด",
+    noResultsTitle: "ไม่พบผลลัพธ์",
+    noResultsHint: "ลองใช้คำค้นอื่น หรือ ล้างตัวกรอง",
+    showing: (n) => `แสดง ${n} รายการ`,
+    filtered: (n, t) => `แสดง ${n} / ${t} รายการ`,
+    copy: "คัดลอกวิธีแก้",
+    copied: "คัดลอกแล้ว",
+    images: "รูปภาพ",
+    related: "คำถามที่เกี่ยวข้อง",
+    updated: (d) => `อัปเดต: ${d}`,
+    tocEmpty: "ไม่มีสารบัญให้แสดง",
+    viewAll: (cat) => `ดูทั้งหมด: ${cat}`,
+  },
+  "en": {
+    toc: "Contents",
+    reset: "Reset",
+    clearFilter: "Clear filter",
+    expandAll: "Expand all",
+    collapseAll: "Collapse all",
+    noResultsTitle: "No results",
+    noResultsHint: "Try another keyword, or clear filters.",
+    showing: (n) => `Showing ${n} items`,
+    filtered: (n, t) => `Showing ${n} / ${t}`,
+    copy: "Copy Solution",
+    copied: "Copied",
+    images: "Images",
+    related: "Related FAQs",
+    updated: (d) => `Updated: ${d}`,
+    tocEmpty: "No table of contents to show.",
+    viewAll: (cat) => `View all: ${cat}`,
+  },
+};
+
+function ui() {
+  return UI[state.lang] ?? UI.zh;
+}
+
+/** localStorage */
+const LANG_KEY = "robot_fqa_lang_v1";
+function loadLang() {
+  const v = localStorage.getItem(LANG_KEY);
+  if (v === "zh" || v === "en" || v === "zh-CN" || v === "th") return v;
+  return "zh";
+}
+function saveLang(v) {
+  localStorage.setItem(LANG_KEY, v);
+}
+
+/** Fetch JSON */
+async function fetchJson(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Fetch failed: ${url}`);
+  return await res.json();
+}
+
+/** Deep merge overlay (only merges objects/arrays; keeps base when overlay missing) */
+function deepMerge(base, overlay) {
+  if (overlay === null || overlay === undefined) return base;
+
+  // arrays: overlay wins
+  if (Array.isArray(base) && Array.isArray(overlay)) return overlay.slice();
+  if (Array.isArray(overlay)) return overlay.slice();
+
+  // objects
+  if (typeof base === "object" && base && typeof overlay === "object" && overlay) {
+    const out = { ...base };
+    for (const k of Object.keys(overlay)) {
+      out[k] = deepMerge(base?.[k], overlay[k]);
+    }
+    return out;
+  }
+
+  // primitives
+  return overlay;
+}
+
+/** Merge overlay faqs by id */
+function mergeFaqsById(baseData, overlayData) {
+  if (!overlayData?.faqs?.length) return baseData;
+
+  const base = structuredClone ? structuredClone(baseData) : JSON.parse(JSON.stringify(baseData));
+  const map = new Map(base.faqs.map((f) => [f.id, f]));
+
+  for (const ofaq of overlayData.faqs) {
+    const b = map.get(ofaq.id);
+    if (b) {
+      map.set(ofaq.id, deepMerge(b, ofaq));
+    } else {
+      // allow new FAQ in overlay
+      map.set(ofaq.id, ofaq);
+    }
+  }
+  base.faqs = Array.from(map.values());
+  base.meta = deepMerge(base.meta ?? {}, overlayData.meta ?? {});
+  return base;
+}
+
+/** Load data:
+ *  - Always load base: ./assets/faqs.json (zh/en)
+ *  - If lang is zh-CN, try overlay: ./assets/faqs.zh-CN.json
+ *  - If lang is th, try overlay: ./assets/faqs.th.json
+ */
+async function loadDataForLang(lang) {
+  const base = await fetchJson("./assets/faqs.json");
+
+  let overlay = null;
+  if (lang === "zh-CN") {
+    try { overlay = await fetchJson("./assets/faqs.zh-CN.json"); } catch { overlay = null; }
+  }
+  if (lang === "th") {
+    try { overlay = await fetchJson("./assets/faqs.th.json"); } catch { overlay = null; }
+  }
+
+  return overlay ? mergeFaqsById(base, overlay) : base;
 }
 
 function clearTocActive() {
   document
     .querySelectorAll(".toc-link.active, .toc-q.active")
-    .forEach(el => el.classList.remove("active"));
+    .forEach((el) => el.classList.remove("active"));
 }
 
 function setTocActiveByFilter() {
   clearTocActive();
-
   const { category, subcategory, faqId } = state.filter;
 
-  // Priority: faqId > subcategory > category
   let selector = null;
-
   if (faqId) {
     selector = `.toc-q[data-id="${CSS.escape(faqId)}"]`;
   } else if (subcategory && category) {
@@ -63,48 +215,69 @@ function setTocActiveByFilter() {
   } else if (category) {
     selector = `.toc-link[data-cat="${CSS.escape(category)}"][data-sub=""]`;
   }
-
   if (!selector) return;
 
   const el = document.querySelector(selector);
   if (el) {
     el.classList.add("active");
-
-    // 確保在側欄可見
-    el.scrollIntoView({
-      block: "nearest",
-      inline: "nearest"
-    });
+    el.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 }
 
 function buildSearchHaystack(faq) {
   const fields = [
-    // bilingual category/subcategory/question to support cross-language search
-    faq.category?.zh || "", faq.category?.en || "",
-    faq.subcategory?.zh || "", faq.subcategory?.en || "",
-    faq.question?.zh || "", faq.question?.en || "",
-
+    faq.category?.zh || "",
+    faq.category?.["zh-CN"] || "",
+    faq.category?.th || "",
+    faq.category?.en || "",
+    faq.subcategory?.zh || "",
+    faq.subcategory?.["zh-CN"] || "",
+    faq.subcategory?.th || "",
+    faq.subcategory?.en || "",
+    faq.question?.zh || "",
+    faq.question?.["zh-CN"] || "",
+    faq.question?.th || "",
+    faq.question?.en || "",
     ...(faq.tags || []),
     ...(faq.keywords || []),
     ...(faq.errorCodes || []),
-
-    ...(faq.symptoms ? [...(faq.symptoms.zh || []), ...(faq.symptoms.en || [])] : []),
-    ...(faq.rootCauses ? [...(faq.rootCauses.zh || []), ...(faq.rootCauses.en || [])] : []),
-    ...(faq.solutionSteps ? [...(faq.solutionSteps.zh || []), ...(faq.solutionSteps.en || [])] : []),
-    ...(faq.notes ? [...(faq.notes.zh || []), ...(faq.notes.en || [])] : []),
-
-    // image captions also searchable
-    ...(faq.images ? faq.images.flatMap(img => [img.caption?.zh || "", img.caption?.en || ""]) : [])
+    ...(faq.symptoms ? [
+      ...(faq.symptoms.zh || []),
+      ...(faq.symptoms["zh-CN"] || []),
+      ...(faq.symptoms.th || []),
+      ...(faq.symptoms.en || []),
+    ] : []),
+    ...(faq.rootCauses ? [
+      ...(faq.rootCauses.zh || []),
+      ...(faq.rootCauses["zh-CN"] || []),
+      ...(faq.rootCauses.th || []),
+      ...(faq.rootCauses.en || []),
+    ] : []),
+    ...(faq.solutionSteps ? [
+      ...(faq.solutionSteps.zh || []),
+      ...(faq.solutionSteps["zh-CN"] || []),
+      ...(faq.solutionSteps.th || []),
+      ...(faq.solutionSteps.en || []),
+    ] : []),
+    ...(faq.notes ? [
+      ...(faq.notes.zh || []),
+      ...(faq.notes["zh-CN"] || []),
+      ...(faq.notes.th || []),
+      ...(faq.notes.en || []),
+    ] : []),
+    ...(faq.images ? faq.images.flatMap(img => [
+      img.caption?.zh || "",
+      img.caption?.["zh-CN"] || "",
+      img.caption?.th || "",
+      img.caption?.en || ""
+    ]) : []),
   ];
-
   return normalizeText(fields.join(" | "));
 }
 
 function scoreFaq(faq, qNorm) {
   if (!qNorm) return 0;
   const q = qNorm;
-
   let score = 0;
 
   const errorCodes = (faq.errorCodes || []).map(normalizeText);
@@ -112,32 +285,24 @@ function scoreFaq(faq, qNorm) {
   const keywords = (faq.keywords || []).map(normalizeText);
 
   const qZh = normalizeText(faq.question?.zh || "");
+  const qZhCN = normalizeText(faq.question?.["zh-CN"] || "");
+  const qTh = normalizeText(faq.question?.th || "");
   const qEn = normalizeText(faq.question?.en || "");
 
-  // 1) errorCodes exact / contains
   if (errorCodes.some((c) => c === q || c.includes(q))) score += 100;
-
-  // 2) question match
-  if (qZh.includes(q) || qEn.includes(q)) score += 60;
-
-  // 3) tags
+  if (qZh.includes(q) || qZhCN.includes(q) || qTh.includes(q) || qEn.includes(q)) score += 60;
   if (tags.some((t) => t === q || t.includes(q))) score += 40;
-
-  // 4) keywords
   if (keywords.some((k) => k === q || k.includes(q))) score += 25;
 
-  // 5) broader content
   const hay = buildSearchHaystack(faq);
   if (hay.includes(q)) score += 10;
 
-  // Bonus: multiple tokens
   const tokens = q.split(" ").filter(Boolean);
   if (tokens.length > 1) {
     let hits = 0;
     for (const t of tokens) if (hay.includes(t)) hits++;
     score += Math.min(20, hits * 5);
   }
-
   return score;
 }
 
@@ -162,13 +327,11 @@ function countFaqsInSubMap(subMap) {
 
 function renderSubcategories(cat, subMap) {
   const parts = [];
-
-  // category-level filter
   parts.push(`
     <div class="toc-sub">
-      <button class="toc-link" data-action="filter"
-              data-cat="${escapeHtml(cat)}" data-sub="" data-id="">
-        查看全部：${escapeHtml(cat)}
+      <button class="toc-link" data-action="filter" data-cat="${escapeHtml(cat)}" data-sub="">
+        <span>${escapeHtml(ui().viewAll(cat))}</span>
+        <span class="toc-count small">${countFaqsInSubMap(subMap)}</span>
       </button>
     </div>
   `);
@@ -176,46 +339,49 @@ function renderSubcategories(cat, subMap) {
   for (const [sub, faqs] of subMap.entries()) {
     parts.push(`
       <div class="toc-sub">
-        <button class="toc-link" data-action="filter"
-                data-cat="${escapeHtml(cat)}" data-sub="${escapeHtml(sub)}" data-id="">
-          ${escapeHtml(sub)}
+        <button class="toc-link" data-action="filter" data-cat="${escapeHtml(cat)}" data-sub="${escapeHtml(sub)}">
+          <span>${escapeHtml(sub)}</span>
           <span class="toc-count small">${faqs.length}</span>
         </button>
         <div class="toc-questions">
-          ${faqs.map(f => `
-            <button class="toc-q" data-action="filter"
-                    data-cat="${escapeHtml(cat)}" data-sub="${escapeHtml(sub)}" data-id="${escapeHtml(f.id)}">
-              ${escapeHtml(getLangObj(f.question))}
-            </button>
-          `).join("")}
+          ${faqs
+            .map(
+              (f) => `
+              <button class="toc-q" data-action="filter" data-id="${escapeHtml(f.id)}">
+                ${escapeHtml(getLangObj(f.question))}
+              </button>
+            `
+            )
+            .join("")}
         </div>
       </div>
     `);
   }
-
   return parts.join("");
 }
 
 function renderTOC(faqsForToc) {
   const toc = els.toc;
   const tree = groupToTree(faqsForToc);
-
   const html = [];
+
   for (const [cat, subMap] of tree.entries()) {
     html.push(`
-      <details class="toc-cat" open>
-        <summary class="toc-cat-summary">
-          <span class="toc-cat-title">${escapeHtml(cat)}</span>
-          <span class="toc-count">${countFaqsInSubMap(subMap)}</span>
-        </summary>
+      <div class="toc-cat">
+        <div class="toc-cat-summary">
+          <div class="toc-cat-title">${escapeHtml(cat)}</div>
+          <div class="toc-count">${countFaqsInSubMap(subMap)}</div>
+        </div>
         <div class="toc-sublist">
           ${renderSubcategories(cat, subMap)}
         </div>
-      </details>
+      </div>
     `);
   }
 
-  toc.innerHTML = html.join("") || `<div class="muted">目前沒有可顯示的目錄。</div>`;
+  toc.innerHTML =
+    html.join("") ||
+    `<div class="skeleton">${escapeHtml(ui().tocEmpty)}</div>`;
 
   toc.querySelectorAll("[data-action='filter']").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -225,7 +391,7 @@ function renderTOC(faqsForToc) {
       applyFilterAndAnchor({
         category: cat || null,
         subcategory: sub || null,
-        faqId: id || null
+        faqId: id || null,
       });
     });
   });
@@ -237,11 +403,16 @@ function setActiveFilterText() {
   if (category) parts.push(category);
   if (subcategory) parts.push(subcategory);
   if (faqId) parts.push(`#${faqId}`);
-  els.activeFilter.textContent = parts.length ? `目前篩選：${parts.join(" / ")}` : "";
+  els.activeFilter.textContent = parts.length ? `Filter: ${parts.join(" / ")}` : "";
 }
 
 function section(labelZh, labelEn, items) {
-  const label = state.lang === "zh" ? labelZh : labelEn;
+  const label =
+    state.lang === "en" ? labelEn :
+    state.lang === "th" ? labelEn :
+    state.lang === "zh-CN" ? labelZh :
+    labelZh;
+
   if (!items || !items.length) return "";
   return `
     <div class="faq-section">
@@ -264,108 +435,92 @@ function renderFaqList(faqsVisible) {
   }
   els.noResults.classList.add("hidden");
 
-  const html = faqsVisible.map((faq) => {
-    const isOpen = state.expandedIds.has(faq.id);
-    const anchorId = `faq_${faq.id}`;
+  const html = faqsVisible
+    .map((faq) => {
+      const isOpen = state.expandedIds.has(faq.id);
+      const anchorId = `faq_${faq.id}`;
+      const title = getLangObj(faq.question);
+      const cat = getLangObj(faq.category);
+      const sub = getLangObj(faq.subcategory);
 
-    const title = getLangObj(faq.question);
-    const cat = getLangObj(faq.category);
-    const sub = getLangObj(faq.subcategory);
+      const errCodes = (faq.errorCodes || [])
+        .map((c) => `<span class="pill danger">${escapeHtml(c)}</span>`)
+        .join("");
 
-    const errCodes = (faq.errorCodes || [])
-      .map((c) => `<span class="pill danger">${escapeHtml(c)}</span>`)
-      .join("");
+      const tags = (faq.tags || [])
+        .slice(0, 8)
+        .map((t) => `<span class="pill subtle">${escapeHtml(t)}</span>`)
+        .join("");
 
-    const tags = (faq.tags || [])
-      .slice(0, 8)
-      .map((t) => `<span class="pill">${escapeHtml(t)}</span>`)
-      .join("");
+      const updated = faq.lastUpdated ? `<span class="pill subtle">${escapeHtml(ui().updated(faq.lastUpdated))}</span>` : "";
 
-    const updated = faq.lastUpdated
-      ? `<span class="muted">更新：${escapeHtml(faq.lastUpdated)}</span>`
-      : "";
+      const symptoms = faq.symptoms?.[state.lang] ?? faq.symptoms?.zh ?? faq.symptoms?.en ?? [];
+      const causes = faq.rootCauses?.[state.lang] ?? faq.rootCauses?.zh ?? faq.rootCauses?.en ?? [];
+      const steps = faq.solutionSteps?.[state.lang] ?? faq.solutionSteps?.zh ?? faq.solutionSteps?.en ?? [];
+      const notes = faq.notes?.[state.lang] ?? faq.notes?.zh ?? faq.notes?.en ?? [];
 
-    const symptoms = faq.symptoms?.[state.lang] || [];
-    const causes = faq.rootCauses?.[state.lang] || [];
-    const steps = faq.solutionSteps?.[state.lang] || [];
-    const notes = faq.notes?.[state.lang] || [];
+      const related = (faq.relatedFaqIds || []).filter(Boolean);
+      const images = faq.images || [];
 
-    const related = (faq.relatedFaqIds || []).filter(Boolean);
-
-    const images = (faq.images || []);
-
-    const imagesBlock = images.length ? `
-      <div class="faq-section">
-        <div class="faq-section-title">${escapeHtml(state.lang === "zh" ? "圖片" : "Images")}</div>
-        <div class="img-grid">
-          ${images.map(img => `
-            <figure class="img-item">
-              <img class="img-thumb"
-                   src="${escapeHtml(img.dataUrl)}"
-                   alt="${escapeHtml(getLangObj(img.caption))}"
-                   data-action="img"
-                   data-src="${escapeHtml(img.dataUrl)}"
-                   data-cap="${escapeHtml(getLangObj(img.caption))}" />
-              <figcaption class="img-cap">${escapeHtml(getLangObj(img.caption))}</figcaption>
-            </figure>
-          `).join("")}
-        </div>
-      </div>
-    ` : "";
-
-    return `
-      <article class="faq-card" id="${escapeHtml(anchorId)}" data-faqid="${escapeHtml(faq.id)}"
-               data-category="${escapeHtml(cat)}" data-subcategory="${escapeHtml(sub)}">
-        <button class="faq-head" type="button" aria-expanded="${isOpen ? "true" : "false"}"
-                data-action="toggle" data-id="${escapeHtml(faq.id)}">
-          <div class="faq-title">
-            <span class="faq-q">Q</span>
-            <span>${escapeHtml(title)}</span>
-          </div>
-          <div class="faq-meta">
-            <span class="pill subtle">${escapeHtml(cat)}</span>
-            <span class="pill subtle">${escapeHtml(sub)}</span>
-            ${errCodes}
-            ${updated}
-          </div>
-        </button>
-
-        <div class="faq-body ${isOpen ? "" : "hidden"}" data-body="${escapeHtml(faq.id)}">
-          <div class="faq-pills">${tags}</div>
-
-          ${section("症狀", "Symptoms", symptoms)}
-          ${section("可能原因（分析）", "Possible Root Causes (Analysis)", causes)}
-          ${section("解決步驟", "Solution Steps", steps)}
-          ${section("注意事項", "Notes", notes)}
-
-          ${imagesBlock}
-
-          ${related.length ? `
-            <div class="faq-section">
-              <div class="faq-section-title">${escapeHtml(state.lang === "zh" ? "相關問題" : "Related FAQs")}</div>
-              <div class="related">
-                ${related.map((rid) => `
-                  <button class="link-btn" type="button" data-action="jump" data-id="${escapeHtml(rid)}">
-                    #${escapeHtml(rid)}
-                  </button>
-                `).join("")}
-              </div>
+      const imagesBlock = images.length
+        ? `
+          <div class="faq-section">
+            <div class="faq-section-title">${escapeHtml(ui().images)}</div>
+            <div class="img-grid">
+              ${images.map(img => `
+                <figure class="img-item">
+                  <img class="img-thumb" data-action="img" data-src="${escapeHtml(img.src || "")}" data-cap="${escapeHtml(getLangObj(img.caption))}" src="${escapeHtml(img.src || "")}" alt="">
+                  <figcaption class="img-cap">${escapeHtml(getLangObj(img.caption))}</figcaption>
+                </figure>
+              `).join("")}
             </div>
-          ` : ""}
-
-          <div class="faq-actions">
-            <button class="btn small" type="button" data-action="copy" data-id="${escapeHtml(faq.id)}">
-              ${escapeHtml(state.lang === "zh" ? "複製解法" : "Copy Solution")}
-            </button>
           </div>
-        </div>
-      </article>
-    `;
-  }).join("");
+        `
+        : "";
+
+      return `
+        <article id="${escapeHtml(anchorId)}" class="faq-card" data-category="${escapeHtml(cat)}" data-subcategory="${escapeHtml(sub)}">
+          <button class="faq-head" data-action="toggle" data-id="${escapeHtml(faq.id)}">
+            <div class="faq-title">
+              <span class="faq-q">Q</span>
+              <span>${escapeHtml(title)}</span>
+            </div>
+            <div class="faq-meta">
+              <span class="pill">${escapeHtml(cat)}</span>
+              <span class="pill subtle">${escapeHtml(sub)}</span>
+              ${updated}
+              ${errCodes}
+            </div>
+            <div class="faq-pills">${tags}</div>
+          </button>
+
+          <div class="faq-body ${isOpen ? "" : "hidden"}" data-body="${escapeHtml(faq.id)}">
+            ${section("症狀", "Symptoms", symptoms)}
+            ${section("可能原因（分析）", "Root Causes", causes)}
+            ${section("解決步驟", "Solution Steps", steps)}
+            ${section("注意事項", "Notes", notes)}
+            ${imagesBlock}
+
+            ${related.length ? `
+              <div class="faq-section">
+                <div class="faq-section-title">${escapeHtml(ui().related)}</div>
+                <div class="related">
+                  ${related.map((rid) => `<button class="btn small ghost" data-action="jump" data-id="${escapeHtml(rid)}">#${escapeHtml(rid)}</button>`).join("")}
+                </div>
+              </div>
+            ` : ""}
+
+            <div class="faq-actions">
+              <button class="btn small" data-action="copy" data-id="${escapeHtml(faq.id)}">${escapeHtml(ui().copy)}</button>
+            </div>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
 
   list.innerHTML = html;
 
-  // Bind actions
   list.querySelectorAll("[data-action='toggle']").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-id");
@@ -388,23 +543,20 @@ function renderFaqList(faqsVisible) {
 
       const lines = [];
       lines.push(`Q: ${getLangObj(faq.question)}`);
-
-      const steps = faq.solutionSteps?.[state.lang] || [];
+      const steps = faq.solutionSteps?.[state.lang] ?? faq.solutionSteps?.zh ?? faq.solutionSteps?.en ?? [];
       if (steps.length) {
-        lines.push(state.lang === "zh" ? "解決步驟：" : "Solution Steps:");
+        lines.push(state.lang === "en" ? "Solution Steps:" : "解決步驟：");
         steps.forEach((s, i) => lines.push(`${i + 1}. ${s}`));
       }
       const codes = faq.errorCodes || [];
-      if (codes.length) {
-        lines.push(`${state.lang === "zh" ? "錯誤碼" : "Error Codes"}: ${codes.join(", ")}`);
-      }
+      if (codes.length) lines.push(`Error Codes: ${codes.join(", ")}`);
 
       try {
         await navigator.clipboard.writeText(lines.join("\n"));
-        btn.textContent = state.lang === "zh" ? "已複製" : "Copied";
-        setTimeout(() => (btn.textContent = state.lang === "zh" ? "複製解法" : "Copy Solution"), 900);
+        btn.textContent = ui().copied;
+        setTimeout(() => (btn.textContent = ui().copy), 900);
       } catch {
-        alert(state.lang === "zh" ? "無法複製（瀏覽器權限限制）" : "Copy failed (browser permission).");
+        alert(state.lang === "en" ? "Copy failed (browser permission)." : "無法複製（瀏覽器權限限制）");
       }
     });
   });
@@ -415,10 +567,7 @@ function renderFaqList(faqsVisible) {
     });
   });
 
-  // Meta
-  els.resultMeta.textContent = state.lang === "zh"
-    ? `顯示 ${faqsVisible.length} 筆`
-    : `Showing ${faqsVisible.length} items`;
+  els.resultMeta.textContent = ui().showing(faqsVisible.length);
 }
 
 function toggleFaq(id) {
@@ -429,7 +578,7 @@ function toggleFaq(id) {
 }
 
 function expandAll() {
-  state.data.faqs.forEach(f => state.expandedIds.add(f.id));
+  state.data.faqs.forEach((f) => state.expandedIds.add(f.id));
   rerender();
 }
 
@@ -443,25 +592,14 @@ function applyFilterAndAnchor({ category, subcategory, faqId }, keepQuery = fals
   state.filter.subcategory = subcategory || null;
   state.filter.faqId = faqId || null;
 
-  // keepQuery means do not change search; directory click combines with search naturally
-  if (!keepQuery) { /* noop */ }
+  if (!keepQuery) { /* keep search */ }
 
   setActiveFilterText();
   rerender(() => {
     let target = null;
-
     if (state.filter.faqId) {
       target = document.querySelector(`#faq_${CSS.escape(state.filter.faqId)}`);
-    } else if (state.filter.subcategory) {
-      target = [...document.querySelectorAll(".faq-card")].find(
-        el => el.getAttribute("data-subcategory") === state.filter.subcategory
-      );
-    } else if (state.filter.category) {
-      target = [...document.querySelectorAll(".faq-card")].find(
-        el => el.getAttribute("data-category") === state.filter.category
-      );
     }
-
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
       target.classList.add("flash");
@@ -480,8 +618,8 @@ function filterFaqs() {
   const q = normalizeText(state.query);
   const all = state.data.faqs.slice();
 
-  // directory filter
   let filtered = all;
+
   if (state.filter.category) {
     filtered = filtered.filter((f) => getLangObj(f.category) === state.filter.category);
   }
@@ -492,48 +630,36 @@ function filterFaqs() {
     filtered = filtered.filter((f) => f.id === state.filter.faqId);
   }
 
-  // search filter
   if (q) {
     filtered = filtered
       .map((f) => ({ f, s: scoreFaq(f, q) }))
       .filter((x) => x.s > 0)
-      .sort((a, b) => {
-        if (b.s !== a.s) return b.s - a.s;
-        return normalizeText(b.f.lastUpdated || "").localeCompare(normalizeText(a.f.lastUpdated || ""));
-      })
+      .sort((a, b) => b.s - a.s)
       .map((x) => x.f);
   } else {
     filtered.sort((a, b) => {
       const ca = normalizeText(getLangObj(a.category));
       const cb = normalizeText(getLangObj(b.category));
       if (ca !== cb) return ca.localeCompare(cb);
-
       const sa = normalizeText(getLangObj(a.subcategory));
       const sb = normalizeText(getLangObj(b.subcategory));
       if (sa !== sb) return sa.localeCompare(sb);
-
       return normalizeText(b.lastUpdated || "").localeCompare(normalizeText(a.lastUpdated || ""));
     });
   }
-
   return filtered;
 }
 
 function rerender(afterRender) {
   const visible = filterFaqs();
-
-  // TOC strategy:
-  // - If there are visible results, TOC follows visible set
-  // - If none (no results), show full TOC
   const tocSet = visible.length ? visible : state.data.faqs;
   renderTOC(tocSet);
   renderFaqList(visible);
   setTocActiveByFilter();
-  
   if (typeof afterRender === "function") afterRender();
 }
 
-/* Lightbox (image viewer) */
+/* Lightbox */
 function openLightbox(src, caption) {
   let box = document.querySelector(".lightbox");
   if (!box) {
@@ -541,83 +667,99 @@ function openLightbox(src, caption) {
     box.className = "lightbox hidden";
     box.innerHTML = `
       <div class="lightbox-backdrop" data-action="close"></div>
-      <div class="lightbox-panel" role="dialog" aria-modal="true">
-        <button class="lightbox-close" type="button" data-action="close">✕</button>
-        <img class="lightbox-img" alt="" />
-        <div class="lightbox-cap muted"></div>
+      <div class="lightbox-panel">
+        <button class="lightbox-close" data-action="close">✕</button>
+        <img class="lightbox-img" id="lbImg" />
+        <div class="lightbox-cap muted" id="lbCap"></div>
       </div>
     `;
     document.body.appendChild(box);
-
-    box.addEventListener("click", (e) => {
-      const a = e.target.getAttribute?.("data-action");
-      if (a === "close") closeLightbox();
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeLightbox();
+    box.querySelectorAll("[data-action='close']").forEach((x) => {
+      x.addEventListener("click", () => box.classList.add("hidden"));
     });
   }
-
-  box.querySelector(".lightbox-img").src = src;
-  box.querySelector(".lightbox-cap").textContent = caption || "";
   box.classList.remove("hidden");
+  const img = box.querySelector("#lbImg");
+  const cap = box.querySelector("#lbCap");
+  img.src = src || "";
+  cap.textContent = caption || "";
 }
 
-function closeLightbox() {
-  const box = document.querySelector(".lightbox");
-  if (box) box.classList.add("hidden");
+/** Apply UI language labels */
+function applyUiTexts() {
+  // Header buttons
+  $("resetBtn").textContent = ui().reset;
+  $("resetFilterBtn").textContent = ui().clearFilter;
+  $("expandAllBtn").textContent = ui().expandAll;
+  $("collapseAllBtn").textContent = ui().collapseAll;
+
+  // Sidebar title
+  $("tocTitle").textContent = ui().toc;
+
+  // No results
+  $("noResultsTitle").textContent = ui().noResultsTitle;
+  $("noResultsHint").textContent = ui().noResultsHint;
+
+  // Placeholder
+  $("searchInput").placeholder =
+    state.lang === "en" ? "Search…" :
+    state.lang === "th" ? "ค้นหา…" :
+    state.lang === "zh-CN" ? "搜索…" :
+    "搜尋…";
+
+  // Footer
+  const meta = state.data?.meta;
+  const scope = meta?.scope ?? "";
+  $("footerLeft").textContent = scope ? `Scope: ${scope}` : "Static FAQ";
+  $("footerRight").textContent = meta?.lastUpdated ? `Last updated: ${meta.lastUpdated}` : "";
 }
 
-async function init() {
-  els.searchInput = $("searchInput");
-  els.clearBtn = $("clearBtn");
-  els.resetFilterBtn = $("resetFilterBtn");
-  els.expandAllBtn = $("expandAllBtn");
-  els.collapseAllBtn = $("collapseAllBtn");
-  els.toc = $("toc");
-  els.faqList = $("faqList");
-  els.noResults = $("noResults");
-  els.activeFilter = $("activeFilter");
-  els.resultMeta = $("resultMeta");
-
-  // Load data
-  const res = await fetch("./assets/faqs.json", { cache: "no-store" });
-  state.data = await res.json();
-
-  // Default collapsed
-  state.expandedIds.clear();
-
-  // Search
-  const onSearch = debounce(() => {
-    state.query = els.searchInput.value || "";
-    rerender();
-  }, 200);
-  els.searchInput.addEventListener("input", onSearch);
-
-  els.clearBtn.addEventListener("click", () => {
-    els.searchInput.value = "";
-    state.query = "";
-    rerender();
-    els.searchInput.focus();
+/** Language segmented buttons */
+function setLangButtonsActive() {
+  document.querySelectorAll(".seg-btn").forEach((b) => {
+    b.classList.toggle("active", b.getAttribute("data-lang") === state.lang);
   });
+}
 
-  els.resetFilterBtn.addEventListener("click", resetFilter);
-  els.expandAllBtn.addEventListener("click", expandAll);
-  els.collapseAllBtn.addEventListener("click", collapseAll);
+/** Set language and reload (with overlay) */
+async function setLang(lang) {
+  state.lang = lang;
+  saveLang(lang);
+  setLangButtonsActive();
 
-  // Language toggle
-  document.querySelectorAll(".seg-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".seg-btn").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.lang = btn.getAttribute("data-lang") || "zh";
-      rerender();
-    });
-  });
-
-  setActiveFilterText();
+  state.data = await loadDataForLang(lang);
+  applyUiTexts();
   rerender();
 }
 
-document.addEventListener("DOMContentLoaded", init);
+/** Init */
+async function init() {
+  els.toc = $("toc");
+  els.faqList = $("faqList");
+  els.noResults = $("noResults");
+  els.resultMeta = $("resultMeta");
+  els.activeFilter = $("activeFilter");
+
+  $("searchInput").addEventListener("input", debounce((e) => {
+    state.query = e.target.value;
+    rerender();
+  }, 180));
+
+  $("resetBtn").addEventListener("click", () => {
+    state.query = "";
+    $("searchInput").value = "";
+    rerender();
+  });
+
+  $("resetFilterBtn").addEventListener("click", () => resetFilter());
+  $("expandAllBtn").addEventListener("click", () => expandAll());
+  $("collapseAllBtn").addEventListener("click", () => collapseAll());
+
+  document.querySelectorAll(".seg-btn").forEach((btn) => {
+    btn.addEventListener("click", () => setLang(btn.getAttribute("data-lang")));
+  });
+
+  await setLang(loadLang());
+}
+
+init();

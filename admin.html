@@ -2,98 +2,99 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Robot FQA Admin</title>
   <link rel="stylesheet" href="./assets/styles.css" />
   <style>
-    .admin-wrap{padding:14px; display:grid; gap:12px; max-width:1200px; margin:0 auto;}
-    .admin-card{border:1px solid var(--line); background: rgba(16,24,39,.5); border-radius: var(--radius); padding:12px;}
-    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
-    .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
-    .field label{display:block; color:var(--muted); font-size:12px; margin:0 0 6px 2px;}
-    select,input,textarea{
-      width:100%; padding:10px 12px; border-radius: 12px;
-      border:1px solid var(--line); background: rgba(16,24,39,.65); color:var(--text);
-      outline:none;
+    .admin-wrap{ padding: 24px; max-width: 980px; margin: 0 auto; }
+    .admin-card{ border:1px solid var(--line2); background: rgba(13,18,32,.52); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+    .row{ display:flex; gap:12px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+    .field{ flex: 1; min-width: 220px; }
+    label{ display:block; font-size:12px; color: var(--muted); margin-bottom: 6px; }
+    input[type="text"], select, textarea{
+      width:100%;
+      padding: 11px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line2);
+      background: rgba(13,18,32,.65);
+      color: var(--text);
+      outline: none;
     }
-    textarea{min-height:86px; resize:vertical}
-    .admin-actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
-    .img-preview{display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:10px; margin-top:10px;}
-    .img-preview .img-item{position:relative}
-    .rm-btn{
-      position:absolute; top:8px; right:8px;
-      border:1px solid var(--line); background: rgba(16,24,39,.75);
-      color:var(--text); border-radius:999px; padding:6px 8px; cursor:pointer;
-    }
-    .hint{color:var(--muted); font-size:12px; line-height:1.4}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    textarea{ min-height: 90px; resize: vertical; }
+    .preview-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+    .preview-item{ border:1px solid var(--line2); border-radius: 14px; overflow:hidden; background: rgba(11,16,32,.35); }
+    .preview-item img{ width:100%; height: 160px; object-fit: cover; display:block; }
+    .preview-item .cap{ padding: 10px; color: var(--muted); font-size: 12px; line-height: 1.4; }
   </style>
 </head>
-
 <body>
   <header class="app-header">
     <div class="brand">
       <div class="brand-title">Robot FQA Admin</div>
-      <div class="brand-subtitle">圖片管理（Base64）· 匯出 faqs.json</div>
+      <div class="brand-subtitle">Edit image captions (zh / zh-CN / th / en) + export</div>
     </div>
     <div class="header-actions">
-      <a class="btn" href="./index.html">回到前台</a>
+      <a class="btn small ghost" href="./index.html" target="_blank" rel="noopener">View</a>
     </div>
   </header>
 
   <main class="admin-wrap">
-    <section class="admin-card">
+    <div class="admin-card">
       <div class="row">
         <div class="field">
-          <label>選擇 FAQ 題目</label>
+          <label>FAQ</label>
           <select id="faqSelect"></select>
         </div>
         <div class="field">
-          <label>目前題目 ID</label>
-          <input id="faqId" class="mono" readonly />
+          <label>FAQ ID</label>
+          <input id="faqId" type="text" readonly />
         </div>
       </div>
-      <div class="hint">
-        小提醒：Base64 會讓 JSON 變大。建議單張圖片控制在 ~300KB 內（可先壓縮/截圖再上傳）。
-      </div>
-    </section>
 
-    <section class="admin-card">
       <div class="row">
         <div class="field">
-          <label>上傳圖片（PNG/JPG/WebP）</label>
+          <label>選擇圖片（會轉成 DataURL 存進 JSON）</label>
           <input id="fileInput" type="file" accept="image/*" />
         </div>
         <div class="field">
-          <label>圖片 ID（可留空，系統自動產生）</label>
-          <input id="imgIdInput" placeholder="img-1" />
+          <label>Image ID（可留空自動產生）</label>
+          <input id="imgIdInput" type="text" placeholder="img-xxxx" />
         </div>
       </div>
 
       <div class="row">
         <div class="field">
-          <label>中文說明（caption.zh）</label>
-          <textarea id="capZh" placeholder="例：接線示意 / 設定頁面位置"></textarea>
+          <label>Caption（繁中 zh）</label>
+          <input id="capZh" type="text" placeholder="例如：接線示意圖" />
         </div>
         <div class="field">
-          <label>English caption (caption.en)</label>
-          <textarea id="capEn" placeholder="e.g., Wiring diagram / Location in settings page"></textarea>
+          <label>Caption（简中 zh-CN）</label>
+          <input id="capZhCN" type="text" placeholder="例如：接线示意图" />
         </div>
       </div>
 
-      <div class="admin-actions">
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button id="addImageBtn" class="btn" type="button">加入圖片到此題</button>
-          <button id="saveDraftBtn" class="btn ghost" type="button">儲存草稿（LocalStorage）</button>
-          <button id="loadDraftBtn" class="btn ghost" type="button">載入草稿（LocalStorage）</button>
+      <div class="row">
+        <div class="field">
+          <label>Caption（ไทย th）</label>
+          <input id="capTh" type="text" placeholder="เช่น: แผนผังการต่อสาย" />
         </div>
-        <button id="exportBtn" class="btn" type="button">匯出 faqs.json</button>
+        <div class="field">
+          <label>Caption（EN）</label>
+          <input id="capEn" type="text" placeholder="e.g., Wiring diagram" />
+        </div>
       </div>
 
-      <div id="status" class="hint" style="margin-top:10px;"></div>
+      <div class="row">
+        <button id="addImageBtn" class="btn">加入圖片</button>
+        <button id="exportBtn" class="btn ghost">匯出（下載 JSON）</button>
+        <button id="saveDraftBtn" class="btn ghost">儲存草稿（本機）</button>
+        <button id="loadDraftBtn" class="btn ghost">載入草稿（本機）</button>
+      </div>
 
-      <div class="img-preview" id="preview"></div>
-    </section>
+      <div id="status" class="muted"></div>
+
+      <div id="preview" class="preview-grid"></div>
+    </div>
   </main>
 
   <script src="./assets/admin.js"></script>

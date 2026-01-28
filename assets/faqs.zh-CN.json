@@ -1,0 +1,53 @@
+{
+  "meta": { "lang": "zh-CN" },
+  "faqs": [
+    {
+      "id": "MS2-CONN-001",
+      "category": { "zh-CN": "连接与通信" },
+      "subcategory": { "zh-CN": "Ethernet/网络" },
+      "question": { "zh-CN": "DRAStudio Pro 找不到 MS2 控制器，连接一直失败怎么办？" },
+      "symptoms": { "zh-CN": ["搜不到控制器", "连接超时或一直重试"] },
+      "rootCauses": {
+        "zh-CN": ["PC 与 MS2 不同网段", "防火墙/安全软件阻挡", "控制器通信服务未就绪"]
+      },
+      "solutionSteps": {
+        "zh-CN": [
+          "确认 MS2 IP 与 PC 网段一致（例如：192.168.1.x，子网掩码一致）",
+          "在 PC 端允许 DRAStudio Pro 通过防火墙（或先临时关闭测试）",
+          "重启 MS2 与 DRAStudio Pro 后重新搜索（必要时改为手动输入 IP）"
+        ]
+      },
+      "notes": {
+        "zh-CN": ["公司网络可能有 DHCP/VLAN 管控，建议固定 IP，并确认交换机/路由设置。"]
+      }
+    },
+    {
+      "id": "MS2-CONN-002",
+      "category": { "zh-CN": "连接与通信" },
+      "subcategory": { "zh-CN": "USB/串口" },
+      "question": { "zh-CN": "连接偶尔会断线或卡住，如何定位问题？" },
+      "symptoms": { "zh-CN": ["偶发断线", "程序/画面卡住", "需要重插或重启才恢复"] },
+      "rootCauses": {
+        "zh-CN": [
+          "线材/端口接触不良或质量不佳",
+          "Windows 电源管理导致 USB 省电断开",
+          "驱动/版本兼容性问题",
+          "EMI 干扰或接地不良造成通信不稳定"
+        ]
+      },
+      "solutionSteps": {
+        "zh-CN": [
+          "更换线材/端口测试（优先排除物理层）",
+          "关闭 Windows USB 选择性暂停（电源管理）",
+          "更新/重装驱动与 DRAStudio Pro，并确认版本匹配",
+          "改善接地与走线，远离高干扰源（变频器、电源线等），必要时加磁环/屏蔽"
+        ]
+      },
+      "notes": {
+        "zh-CN": [
+          "建议先做“最小变更”的 A/B 对照：只换线、只换端口、只关省电，逐项排除最有效。"
+        ]
+      }
+    }
+  ]
+}
