@@ -4,48 +4,63 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Robot FQA</title>
-  <link rel="stylesheet" href="./assets/styles.css" />
+
+  <!-- Cache bust：避免 GitHub Pages / 瀏覽器載到舊 CSS -->
+  <link rel="stylesheet" href="./assets/styles.css?v=20260128" />
+
+  <!-- 盡量降低快取干擾（仍以 v= 版本號最有效） -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 </head>
+
 <body>
+  <!-- Header -->
   <header class="app-header">
     <div class="brand">
-      <div class="brand-title" id="brandTitle">Robot FQA</div>
-      <div class="brand-subtitle" id="brandSubtitle">Delta + MS2 + DRAStudio Pro</div>
+      <div class="brand-title">Robot FQA</div>
+      <div class="brand-subtitle">Delta + MS2 + DRAStudio Pro</div>
     </div>
 
     <div class="header-actions">
       <div class="search-wrap">
-        <input id="searchInput" class="search-input" type="search" placeholder="搜尋…" />
-        <button id="resetBtn" class="btn small ghost">重置</button>
+        <input id="searchInput" class="search-input" type="search" placeholder="搜尋…" autocomplete="off" />
+        <button id="resetBtn" class="btn">重置</button>
       </div>
 
       <div class="controls">
-        <div class="segmented" aria-label="Language">
+        <!-- Language segmented -->
+        <div class="segmented" aria-label="Language switch">
           <button class="seg-btn active" data-lang="zh" type="button">繁中</button>
           <button class="seg-btn" data-lang="zh-CN" type="button">简中</button>
           <button class="seg-btn" data-lang="th" type="button">ไทย</button>
           <button class="seg-btn" data-lang="en" type="button">EN</button>
         </div>
 
-        <button id="expandAllBtn" class="btn small">展開全部</button>
-        <button id="collapseAllBtn" class="btn small ghost">收合全部</button>
+        <button id="expandAllBtn" class="btn small" type="button">展開全部</button>
+        <button id="collapseAllBtn" class="btn small" type="button">收合全部</button>
 
-        <a class="btn small ghost" href="./admin.html" target="_blank" rel="noopener">Admin</a>
+        <a class="btn small ghost" href="./admin.html">Admin</a>
       </div>
     </div>
   </header>
 
+  <!-- Main -->
   <main class="app-main">
+    <!-- Sidebar / TOC -->
     <aside class="sidebar">
       <div class="sidebar-title" id="tocTitle">目錄</div>
+
       <div class="sidebar-tools">
-        <button id="resetFilterBtn" class="btn small ghost">清除篩選</button>
+        <button id="resetFilterBtn" class="btn small" type="button">清除篩選</button>
       </div>
+
       <div id="toc" class="toc">
         <div class="skeleton">Loading…</div>
       </div>
     </aside>
 
+    <!-- Content -->
     <section class="content">
       <div class="content-top">
         <div id="activeFilter" class="active-filter"></div>
@@ -53,8 +68,8 @@
       </div>
 
       <div id="noResults" class="no-results hidden">
-        <div class="no-results-title" id="noResultsTitle">找不到結果</div>
-        <div class="muted" id="noResultsHint">請嘗試不同關鍵字，或清除篩選。</div>
+        <div id="noResultsTitle" class="no-results-title">找不到結果</div>
+        <div id="noResultsHint">請嘗試不同關鍵字，或清除篩選。</div>
       </div>
 
       <div id="faqList" class="faq-list">
@@ -63,11 +78,13 @@
     </section>
   </main>
 
+  <!-- Footer -->
   <footer class="app-footer">
-    <div class="muted" id="footerLeft">Static FAQ</div>
-    <div class="muted" id="footerRight"></div>
+    <div id="footerLeft">Static FAQ</div>
+    <div id="footerRight"></div>
   </footer>
 
-  <script src="./assets/app.js"></script>
+  <!-- Cache bust：避免載到舊 JS -->
+  <script defer src="./assets/app.js?v=20260128"></script>
 </body>
 </html>
