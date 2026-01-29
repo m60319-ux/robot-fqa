@@ -175,18 +175,21 @@ function ui() {
 
 // ------------------------ Data loading ------------------------
 async function fetchJson(url) {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Fetch failed: ${url} (${res.status})`);
-  return await res.json();
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) throw new Error(`Fetch failed: ${url} (${r.status})`);
+  return await r.json();
 }
+
+
+const DATA_VER = "20260129"; // ★ 每次更新 JSON 就改這個
 
 async function loadDataForLang(lang) {
   const l = normalizeLang(lang);
   const map = {
-    zh: "./assets/faqs.zh.json",
-    "zh-CN": "./assets/faqs.zh-CN.json",
-    en: "./assets/faqs.en.json",
-    th: "./assets/faqs.th.json",
+    zh: `./assets/faqs.zh.json?v=${DATA_VER}`,
+    "zh-CN": `./assets/faqs.zh-CN.json?v=${DATA_VER}`,
+    en: `./assets/faqs.en.json?v=${DATA_VER}`,
+    th: `./assets/faqs.th.json?v=${DATA_VER}`,
   };
   return await fetchJson(map[l]);
 }
