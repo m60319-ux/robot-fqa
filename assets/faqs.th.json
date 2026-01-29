@@ -1,53 +1,59 @@
 {
   "meta": {
     "lang": "th",
-    "scope": "Delta Arm + MS2 Controller + DRAStudio Pro",
-    "version": "0.2",
-    "lastUpdated": "2026-01-28"
+    "scope": "Robot FQA",
+    "version": "1.0",
+    "lastUpdated": "2026-01-29"
   },
   "faqs": [
     {
+      "id": "MS2-ALM-001",
+      "category": "สัญญาณเตือนและรหัสข้อผิดพลาด123",
+      "subcategory": "",
+      "question": "",
+      "symptoms": [],
+      "rootCauses": [],
+      "solutionSteps": [],
+      "notes": [],
+      "tags": [
+        "錯誤碼",
+        "流程",
+        "Log"
+      ],
+      "keywords": [
+        "timestamp",
+        "event log",
+        "triage"
+      ],
+      "lastUpdated": "2025/12/17"
+    },
+    {
       "id": "MS2-CONN-001",
-      "category": {
-        "th": "การเชื่อมต่อและการสื่อสาร"
-      },
-      "subcategory": {
-        "th": "Ethernet / เครือข่าย"
-      },
-      "question": {
-        "th": "DRAStudio Pro หา MS2 controller ไม่เจอ การเชื่อมต่อล้มเหลว ติดต่อไม่ได้ ควรตรวจสอบอะไรบ้าง?"
-      },
-      "symptoms": {
-        "th": [
-          "Controller ไม่ถูกค้นพบ",
-          "การเชื่อมต่อหมดเวลา / ลองใหม่ซ้ำ ๆ"
-        ]
-      },
-      "rootCauses": {
-        "th": [
-          "PC และ MS2 อยู่ใน subnet ต่างกัน",
-          "ไฟร์วอลล์ / ซอฟต์แวร์รักษาความปลอดภัยบล็อกการสื่อสาร",
-          "บริการสื่อสารของ controller ยังไม่พร้อมทำงาน"
-        ]
-      },
-      "solutionSteps": {
-        "th": [
-          "ตรวจสอบให้แน่ใจว่า IP ของ MS2 และ PC อยู่ใน subnet เดียวกัน (เช่น 192.168.1.x และมี mask เดียวกัน)",
-          "อนุญาตให้ DRAStudio Pro ผ่านไฟร์วอลล์ (หรือปิดชั่วคราวเพื่อทดสอบ)",
-          "รีสตาร์ท MS2 และ DRAStudio Pro แล้วลองค้นหาอีกครั้ง (หรือพยายามใส่ IP แบบ manual)"
-        ]
-      },
-      "notes": {
-        "th": [
-          "เครือข่ายของบริษัทอาจมีการบังคับใช้ DHCP/VLAN แนะนำให้ตั้ง IP แบบคงที่และตรวจสอบการตั้งค่า switch/router"
-        ]
-      },
-      "errorCodes": [],
+      "category": "การเชื่อมต่อและการสื่อสาร",
+      "subcategory": "Ethernet / เครือข่าย",
+      "question": "DRAStudio Pro หา MS2 controller ไม่เจอ การเชื่อมต่อล้มเหลว ติดต่อไม่ได้ ควรตรวจสอบอะไรบ้าง?",
+      "symptoms": [
+        "Controller ไม่ถูกค้นพบ",
+        "การเชื่อมต่อหมดเวลา / ลองใหม่ซ้ำ ๆ"
+      ],
+      "rootCauses": [
+        "PC และ MS2 อยู่ใน subnet ต่างกัน",
+        "ไฟร์วอลล์ / ซอฟต์แวร์รักษาความปลอดภัยบล็อกการสื่อสาร",
+        "บริการสื่อสารของ controller ยังไม่พร้อมทำงาน"
+      ],
+      "solutionSteps": [
+        "ตรวจสอบให้แน่ใจว่า IP ของ MS2 และ PC อยู่ใน subnet เดียวกัน (เช่น 192.168.1.x และมี mask เดียวกัน)",
+        "อนุญาตให้ DRAStudio Pro ผ่านไฟร์วอลล์ (หรือปิดชั่วคราวเพื่อทดสอบ)",
+        "รีสตาร์ท MS2 และ DRAStudio Pro แล้วลองค้นหาอีกครั้ง (หรือพยายามใส่ IP แบบ manual)"
+      ],
+      "notes": [
+        "เครือข่ายของบริษัทอาจมีการบังคับใช้ DHCP/VLAN แนะนำให้ตั้ง IP แบบคงที่และตรวจสอบการตั้งค่า switch/router"
+      ],
       "tags": [
         "MS2",
         "DRAStudio Pro",
-        "การเชื่อมต่อ",
-        "เครือข่าย",
+        "連線",
+        "網段",
         "IP"
       ],
       "keywords": [
@@ -56,63 +62,205 @@
         "vlan",
         "nic"
       ],
-      "images": [],
       "relatedFaqIds": [
         "MS2-CONN-002"
       ],
-      "lastUpdated": "2026-01-28"
+      "lastUpdated": "2025/12/17"
     },
     {
       "id": "MS2-CONN-002",
-      "category": {
-        "th": "การเชื่อมต่อและการสื่อสาร"
-      },
-      "subcategory": {
-        "th": "USB / Serial"
-      },
-      "question": {
-        "th": "การเชื่อมต่อบางครั้งหลุดหรือค้าง ต้องตรวจสอบปัญหาอย่างไร?"
-      },
-      "symptoms": {
-        "th": [
-          "การเชื่อมต่อขาดเป็นช่วง ๆ",
-          "อุปกรณ์ค้างหรือไม่มีการตอบสนอง"
-        ]
-      },
-      "rootCauses": {
-        "th": [
-          "สาย USB มีปัญหาหรือหลวม",
-          "การตั้งค่าพอร์ต Serial ผิดพลาด",
-          "ปัญหาซอฟต์แวร์ไดรเวอร์"
-        ]
-      },
-      "solutionSteps": {
-        "th": [
-          "ตรวจสอบว่าสาย USB แน่นและไม่มีความเสียหาย",
-          "ตรวจสอบการตั้งค่าพอร์ต Serial ให้ตรงกับอุปกรณ์",
-          "อัปเดตหรือติดตั้งไดรเวอร์ล่าสุด"
-        ]
-      },
-      "notes": {
-        "th": [
-          "บางครั้งปัญหาอาจเกี่ยวกับพอร์ตหรือฮาร์ดแวร์ แนะนำให้เปลี่ยนพอร์ตหรือสายเพื่อทดสอบ"
-        ]
-      },
-      "errorCodes": [],
+      "category": "การเชื่อมต่อและการสื่อสาร",
+      "subcategory": "USB / Serial",
+      "question": "การเชื่อมต่อบางครั้งหลุดหรือค้าง ต้องตรวจสอบปัญหาอย่างไร?",
+      "symptoms": [
+        "การเชื่อมต่อขาดเป็นช่วง ๆ",
+        "อุปกรณ์ค้างหรือไม่มีการตอบสนอง"
+      ],
+      "rootCauses": [
+        "สาย USB มีปัญหาหรือหลวม",
+        "การตั้งค่าพอร์ต Serial ผิดพลาด",
+        "ปัญหาซอฟต์แวร์ไดรเวอร์"
+      ],
+      "solutionSteps": [
+        "ตรวจสอบว่าสาย USB แน่นและไม่มีความเสียหาย",
+        "ตรวจสอบการตั้งค่าพอร์ต Serial ให้ตรงกับอุปกรณ์",
+        "อัปเดตหรือติดตั้งไดรเวอร์ล่าสุด"
+      ],
+      "notes": [
+        "บางครั้งปัญหาอาจเกี่ยวกับพอร์ตหรือฮาร์ดแวร์ แนะนำให้เปลี่ยนพอร์ตหรือสายเพื่อทดสอบ"
+      ],
       "tags": [
-        "MS2",
-        "การเชื่อมต่อ",
+        "斷線",
         "USB",
-        "Serial"
+        "序列",
+        "EMI"
       ],
       "keywords": [
-        "USB",
-        "Serial",
-        "disconnect"
+        "power saving",
+        "ground",
+        "noise"
       ],
-      "images": [],
-      "relatedFaqIds": [],
-      "lastUpdated": "2026-01-28"
+      "relatedFaqIds": [
+        "MS2-CONN-001"
+      ],
+      "lastUpdated": "2025/12/17"
+    },
+    {
+      "id": "MS2-HOME-001",
+      "category": "",
+      "subcategory": "",
+      "question": "",
+      "symptoms": [],
+      "rootCauses": [],
+      "solutionSteps": [],
+      "notes": [],
+      "tags": [
+        "Home",
+        "Z-index",
+        "原點"
+      ],
+      "keywords": [
+        "homing",
+        "index",
+        "sensor"
+      ],
+      "errorCodes": [
+        "ALM_045"
+      ],
+      "lastUpdated": "2025/12/17"
+    },
+    {
+      "id": "MS2-IO-001",
+      "category": "",
+      "subcategory": "",
+      "question": "",
+      "symptoms": [],
+      "rootCauses": [],
+      "solutionSteps": [],
+      "notes": [],
+      "tags": [
+        "I/O",
+        "夾爪",
+        "DO"
+      ],
+      "keywords": [
+        "NPN",
+        "PNP",
+        "relay",
+        "common ground"
+      ],
+      "lastUpdated": "2025/12/17"
+    },
+    {
+      "id": "MS2-MOTION-001",
+      "category": "",
+      "subcategory": "",
+      "question": "",
+      "symptoms": [],
+      "rootCauses": [],
+      "solutionSteps": [],
+      "notes": [],
+      "tags": [
+        "速度",
+        "加速度",
+        "限制"
+      ],
+      "keywords": [
+        "speed cap",
+        "safety mode",
+        "torque"
+      ],
+      "lastUpdated": "2025/12/17"
+    },
+    {
+      "id": "MS2-MOTION-002",
+      "category": "",
+      "subcategory": "",
+      "question": "",
+      "symptoms": [],
+      "rootCauses": [],
+      "solutionSteps": [],
+      "notes": [],
+      "tags": [
+        "碰撞",
+        "扭矩",
+        "保護"
+      ],
+      "keywords": [
+        "singularity",
+        "torque limit",
+        "interference"
+      ],
+      "errorCodes": [
+        "E-1234"
+      ],
+      "lastUpdated": "2025/12/17"
+    },
+    {
+      "id": "MS2-PROG-001",
+      "category": "",
+      "subcategory": "",
+      "question": "",
+      "symptoms": [],
+      "rootCauses": [],
+      "solutionSteps": [],
+      "notes": [],
+      "tags": [
+        "除錯",
+        "等待",
+        "timeout"
+      ],
+      "keywords": [
+        "deadlock",
+        "wait",
+        "flag"
+      ],
+      "lastUpdated": "2025/12/17"
+    },
+    {
+      "id": "MS2-SAFE-001",
+      "category": "",
+      "subcategory": "",
+      "question": "",
+      "symptoms": [],
+      "rootCauses": [],
+      "solutionSteps": [],
+      "notes": [],
+      "tags": [
+        "急停",
+        "安全",
+        "復歸"
+      ],
+      "keywords": [
+        "safety chain",
+        "servo on",
+        "reset"
+      ],
+      "errorCodes": [
+        "ALM_010"
+      ],
+      "lastUpdated": "2025/12/17"
+    },
+    {
+      "id": "MS2-SW-001",
+      "category": "",
+      "subcategory": "",
+      "question": "",
+      "symptoms": [],
+      "rootCauses": [],
+      "solutionSteps": [],
+      "notes": [],
+      "tags": [
+        "權限",
+        "授權",
+        "相容性"
+      ],
+      "keywords": [
+        "role",
+        "license",
+        "offline mode"
+      ],
+      "lastUpdated": "2025/12/17"
     }
   ]
 }
